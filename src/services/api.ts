@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 // Configuração da API
 const BASE_URL: string =
   import.meta.env.VITE_API_URL ??
@@ -7,7 +9,6 @@ const BASE_URL: string =
 interface RequestOptions extends RequestInit {
   body?: any;
 }
-
 
 // Função genérica para requisições
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -23,7 +24,6 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     headers,
   };
 
-  // Se body existe e não é string, serializa para JSON
   if (config.body && typeof config.body !== "string") {
     config.body = JSON.stringify(config.body);
   }
@@ -40,16 +40,14 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       try {
         const errorText = await response.text();
         if (errorText) errorMessage = errorText;
-      } catch {
-        // mantem padrão
-      }
+      } catch {}
     }
 
     throw new Error(errorMessage);
   }
 
-  // alguns backends não mandam content-length; se 204 ou sem body, retorna undefined
   if (response.status === 204) return undefined as T;
+
   const text = await response.text();
   if (!text) return undefined as T;
 
@@ -64,24 +62,29 @@ export type DificuldadeUI = "easy" | "medium" | "hard";
 export type DificuldadeAPI = "FACIL" | "MEDIO" | "DIFICIL";
 
 export interface ProcessoTO {
-  id?: number;          // UI
-  codProcesso?: number; // UI/API fallback
-  codigo?: number;      // API (alguns retornos)
-  nome?: string;        // UI
-  titulo?: string;      // API
+  id?: number;          
+  codProcesso?: number; 
+  codigo?: number;      
+
+  nome?: string;        
+  titulo?: string;      
   descricao?: string;
+
+  // UI-only (backend pode não ter)
   categoria?: string;
-  tempoEstimadoMin?: number; // API
-  tempoEstimado?: number;    // UI legado
+  tempoEstimadoMin?: number;
+  tempoEstimado?: number;
   dificuldade?: DificuldadeUI | DificuldadeAPI;
   status?: "draft" | "active" | "archived" | "deprecated";
+
   etapas?: EtapaTO[];
 }
 
 export interface EtapaTO {
-  id?: number;          // UI
-  codEtapa?: number;    // UI/API fallback
-  codigo?: number;      // API
+  id?: number;
+  codEtapa?: number;
+  codigo?: number;
+
   codProcesso: number;
   ordem: number;
   titulo: string;
@@ -94,6 +97,7 @@ export interface ExecucaoTO {
   id?: number;
   codExecucao?: number;
   codigo?: number;
+
   codProcesso: number;
   cpfOuUsuario?: string;
   status: "pending" | "in_progress" | "completed" | "blocked";
@@ -121,14 +125,20 @@ function normalizarProcesso(p: any): ProcessoTO {
 }
 
 function normalizarEtapa(e: any, index = 0): EtapaTO {
+  const codProcesso = Number(
+    e.codProcesso ?? e.cod_processo ?? e.processoId ?? 0
+  );
+
+  const ordem = Number(e.ordem ?? e.order ?? index + 1);
+
   return {
     ...e,
     id: e.id ?? e.codEtapa ?? e.codigo ?? index + 1,
     codEtapa: e.codEtapa ?? e.id ?? e.codigo ?? index + 1,
     titulo: e.titulo ?? e.title ?? `Etapa ${index + 1}`,
     descricao: e.descricao ?? e.description ?? "",
-    ordem: e.ordem ?? e.order ?? index + 1,
-    codProcesso: e.codProcesso ?? e.cod_processo ?? e.processoId,
+    ordem,
+    codProcesso,
   };
 }
 
@@ -148,32 +158,27 @@ function mapDificuldadeToAPI(d?: DificuldadeUI | DificuldadeAPI): DificuldadeAPI
 // PROCESSOS
 // =====================================================
 
-// GET /processos - Listar todos os processos
+// GET /processos
 export async function listarProcessos(): Promise<ProcessoTO[]> {
   const data = await request<any[]>("/processos");
   return (data || []).map(normalizarProcesso);
 }
 
-// GET /processos/{id} - Buscar processo por ID
+// GET /processos/{id}
 export async function buscarProcesso(id: number | string): Promise<ProcessoTO> {
   const data = await request<any>(`/processos/${id}`);
   return normalizarProcesso(data);
 }
 
-// POST /processos - Criar novo processo
+// POST /processos
 export async function criarProcesso(
   processo: Omit<ProcessoTO, "id" | "codProcesso" | "codigo">
 ): Promise<ProcessoTO> {
+  // BACKEND ACEITA SÓ: titulo, descricao, dataCriacao
   const payload = {
-    // backend espera titulo, não "nome"
     titulo: processo.titulo ?? processo.nome ?? "Novo Processo",
     descricao: processo.descricao ?? "",
-    categoria: processo.categoria ?? "",
-    tempoEstimadoMin: Number(
-      processo.tempoEstimadoMin ?? processo.tempoEstimado ?? 0
-    ),
-    dificuldade: mapDificuldadeToAPI(processo.dificuldade),
-    dataCriacao: new Date().toISOString().split("T")[0], // evita validação nula
+    dataCriacao: new Date().toISOString().split("T")[0],
   };
 
   const data = await request<any>("/processos", {
@@ -184,28 +189,19 @@ export async function criarProcesso(
   return normalizarProcesso(data);
 }
 
-// PUT /processos/{id} - Atualizar processo
+// PUT /processos/{id}
 export async function atualizarProcesso(
   id: number | string,
   processo: Partial<ProcessoTO>
 ): Promise<ProcessoTO> {
+  // BACKEND ACEITA SÓ: titulo, descricao (dataCriacao geralmente não atualiza)
   const payload: any = {
     ...(processo.titulo || processo.nome
       ? { titulo: processo.titulo ?? processo.nome }
       : {}),
-    ...(processo.descricao !== undefined ? { descricao: processo.descricao } : {}),
-    ...(processo.categoria !== undefined ? { categoria: processo.categoria } : {}),
-    ...(processo.tempoEstimadoMin !== undefined || processo.tempoEstimado !== undefined
-      ? {
-          tempoEstimadoMin: Number(
-            processo.tempoEstimadoMin ?? processo.tempoEstimado
-          ),
-        }
+    ...(processo.descricao !== undefined
+      ? { descricao: processo.descricao }
       : {}),
-    ...(processo.dificuldade !== undefined
-      ? { dificuldade: mapDificuldadeToAPI(processo.dificuldade) }
-      : {}),
-    ...(processo.status !== undefined ? { status: processo.status } : {}),
   };
 
   const data = await request<any>(`/processos/${id}`, {
@@ -216,7 +212,7 @@ export async function atualizarProcesso(
   return normalizarProcesso(data);
 }
 
-// DELETE /processos/{id} - Deletar processo
+// DELETE /processos/{id}
 export async function deletarProcesso(id: number | string): Promise<void> {
   return request<void>(`/processos/${id}`, { method: "DELETE" });
 }
@@ -268,12 +264,16 @@ export async function atualizarEtapa(
   etapa: Partial<EtapaTO>
 ): Promise<EtapaTO> {
   const payload: any = {
-    ...(etapa.codProcesso !== undefined ? { codProcesso: Number(etapa.codProcesso) } : {}),
+    ...(etapa.codProcesso !== undefined
+      ? { codProcesso: Number(etapa.codProcesso) }
+      : {}),
     ...(etapa.ordem !== undefined ? { ordem: Number(etapa.ordem) } : {}),
     ...(etapa.titulo !== undefined ? { titulo: etapa.titulo } : {}),
     ...(etapa.descricao !== undefined ? { descricao: etapa.descricao } : {}),
     ...(etapa.tipo !== undefined ? { tipo: etapa.tipo } : {}),
-    ...(etapa.dependencias !== undefined ? { dependencias: etapa.dependencias } : {}),
+    ...(etapa.dependencias !== undefined
+      ? { dependencias: etapa.dependencias }
+      : {}),
   };
 
   const data = await request<any>(`/etapas/${id}`, {
