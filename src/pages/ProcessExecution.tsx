@@ -1,7 +1,24 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, XCircle, PlayCircle, Upload, FileText, AlertCircle, Loader2, AlertTriangle } from 'lucide-react';
-import { buscarProcesso, listarEtapasPorProcesso, iniciarExecucao, finalizarEtapa, ProcessoTO, EtapaTO, ExecucaoTO } from '../services/api';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  XCircle,
+  PlayCircle,
+  Upload,
+  FileText,
+  AlertCircle,
+  Loader2
+} from 'lucide-react';
+import {
+  buscarProcesso,
+  listarEtapasPorProcesso,
+  iniciarExecucao,
+  finalizarEtapa,
+  ProcessoTO,
+  EtapaTO,
+  ExecucaoTO
+} from '../services/api';
 
 interface StepData {
   [key: number]: {
@@ -26,9 +43,8 @@ const ProcessExecution = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      carregarDados();
-    }
+    if (id) carregarDados();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const carregarDados = async () => {
@@ -37,7 +53,7 @@ const ProcessExecution = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const [processoData, etapasData] = await Promise.all([
         buscarProcesso(id),
         listarEtapasPorProcesso(id).catch(() => [] as EtapaTO[]),
@@ -48,7 +64,11 @@ const ProcessExecution = () => {
 
       // Tentar iniciar execução se ainda não houver
       try {
-        const codProcesso = processoData.codProcesso || processoData.id || Number(id);
+        const codProcesso =
+          (processoData as any).codProcesso ||
+          (processoData as any).id ||
+          Number(id);
+
         const execucaoData = await iniciarExecucao(Number(codProcesso));
         setExecucao(execucaoData);
       } catch (err) {
@@ -63,39 +83,45 @@ const ProcessExecution = () => {
   };
 
   // Converter dados da API para formato esperado pela UI
-  const processMock: any = process ? {
-    id: process.id || process.codProcesso || Number(id),
-    title: process.nome || process.title || 'Processo',
-    steps: etapas.map((etapa, index) => ({
-      id: etapa.id || etapa.codEtapa || index + 1,
-      order: etapa.ordem || etapa.order || index + 1,
-      title: etapa.titulo || etapa.title || `Etapa ${index + 1}`,
-      description: etapa.descricao || etapa.description || '',
-      type: etapa.tipo || etapa.type || 'action',
-    })),
-  } : {
-    id: Number(id),
-    title: 'Carregando...',
-    steps: [],
-  };
+  const processMock: any = process
+    ? {
+        id: (process as any).id || (process as any).codProcesso || Number(id),
+        title: (process as any).nome || (process as any).title || 'Processo',
+        steps: etapas.map((etapa, index) => ({
+          id: (etapa as any).id || (etapa as any).codEtapa || index + 1,
+          order: etapa.ordem || (etapa as any).order || index + 1,
+          title: etapa.titulo || (etapa as any).title || `Etapa ${index + 1}`,
+          description: etapa.descricao || (etapa as any).description || '',
+          type: (etapa as any).tipo || (etapa as any).type || 'action',
+        })),
+      }
+    : {
+        id: Number(id),
+        title: 'Carregando...',
+        steps: [],
+      };
 
-  // Mock de steps detalhados para compatibilidade (se não vierem da API)
-  const processWithDetails: any = process ? {
-    id: process.id || process.codProcesso || Number(id),
-    title: process.nome || process.title || 'Processo',
-    steps: etapas.length > 0 ? etapas.map((etapa, index) => ({
-      id: etapa.id || etapa.codEtapa || index + 1,
-      order: etapa.ordem || etapa.order || index + 1,
-      title: etapa.titulo || etapa.title || `Etapa ${index + 1}`,
-      description: etapa.descricao || etapa.description || '',
-      type: etapa.tipo || etapa.type || 'action',
-      // Campos adicionais para compatibilidade com UI
-      fields: [],
-      content: {},
-      modules: [],
-      questions: [],
-      documents: [],
-    })) : [
+  // ====== STEPS DETALHADAS SEM TERNÁRIO EXTERNO (evita erro do esbuild) ======
+  const buildDetailedSteps = () => {
+    if (etapas.length > 0) {
+      return etapas.map((etapa, index) => ({
+        id: (etapa as any).id || (etapa as any).codEtapa || index + 1,
+        order: etapa.ordem || (etapa as any).order || index + 1,
+        title: etapa.titulo || (etapa as any).title || `Etapa ${index + 1}`,
+        description: etapa.descricao || (etapa as any).description || '',
+        type: (etapa as any).tipo || (etapa as any).type || 'action',
+
+        // Campos adicionais para compatibilidade com UI
+        fields: [],
+        content: {},
+        modules: [],
+        questions: [],
+        documents: [],
+      }));
+    }
+
+    // fallback se o backend não retornar etapas
+    return [
       {
         id: 1,
         order: 1,
@@ -107,7 +133,13 @@ const ProcessExecution = () => {
           { name: 'email', label: 'E-mail', type: 'email', required: true },
           { name: 'telefone', label: 'Telefone', type: 'tel', required: true },
           { name: 'cargo', label: 'Cargo', type: 'text', required: true },
-          { name: 'departamento', label: 'Departamento', type: 'select', required: true, options: ['RH', 'TI', 'Vendas', 'Marketing', 'Financeiro'] },
+          {
+            name: 'departamento',
+            label: 'Departamento',
+            type: 'select',
+            required: true,
+            options: ['RH', 'TI', 'Vendas', 'Marketing', 'Financeiro'],
+          },
         ],
       },
       {
@@ -118,7 +150,8 @@ const ProcessExecution = () => {
         type: 'information',
         content: {
           video: 'https://example.com/video-boas-vindas',
-          text: 'Bem-vindo à nossa empresa! Este vídeo apresenta nossa cultura, valores e missão. Assista com atenção e depois marque como concluído.',
+          text:
+            'Bem-vindo à nossa empresa! Este vídeo apresenta nossa cultura, valores e missão. Assista com atenção e depois marque como concluído.',
           checklist: [
             'Assistir vídeo completo',
             'Ler código de conduta',
@@ -173,28 +206,39 @@ const ProcessExecution = () => {
           { name: 'Comprovante de Residência', required: true, uploaded: false },
         ],
       },
-    ],
+    ];
   };
 
+  const processWithDetails: any = process
+    ? {
+        id: (process as any).id || (process as any).codProcesso || Number(id),
+        title: (process as any).nome || (process as any).title || 'Processo',
+        steps: buildDetailedSteps(),
+      }
+    : null;
+
   // Usar processWithDetails se disponível, senão usar processMock
-  const processToUse = processWithDetails?.steps?.length > 0 ? processWithDetails : processMock;
-  
-  const currentStep = processToUse.steps.find((s: any) => s.id === currentStepId) || processToUse.steps[0];
-  const currentIndex = processToUse.steps.findIndex((s: any) => s.id === currentStepId);
-  const isCompleted = stepData[currentStepId]?.completed || false;
+  const processToUse =
+    processWithDetails?.steps?.length > 0 ? processWithDetails : processMock;
+
+  const currentStep =
+    processToUse.steps.find((s: any) => s.id === currentStepId) ||
+    processToUse.steps[0];
+
+  const currentIndex = processToUse.steps.findIndex(
+    (s: any) => s.id === currentStepId
+  );
 
   const handleInputChange = (name: string, value: any) => {
     setFormData({ ...formData, [name]: value });
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: '' });
-    }
+    if (errors[name]) setErrors({ ...errors, [name]: '' });
   };
 
   const validateStep = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
     if (currentStep.type === 'form') {
-      currentStep.fields?.forEach((field) => {
+      currentStep.fields?.forEach((field: any) => {
         if (field.required && !formData[field.name]) {
           newErrors[field.name] = `${field.label} é obrigatório`;
         }
@@ -206,9 +250,7 @@ const ProcessExecution = () => {
   };
 
   const handleCompleteStep = async () => {
-    if (currentStep?.type === 'form' && !validateStep()) {
-      return;
-    }
+    if (currentStep?.type === 'form' && !validateStep()) return;
 
     // Bloquear pular etapa
     if (currentIndex > 0) {
@@ -226,13 +268,12 @@ const ProcessExecution = () => {
       if (execucao && currentStep) {
         const codEtapa = currentStep.id || currentStepId;
         try {
-          const codExecucao = execucao.codExecucao || execucao.id;
+          const codExecucao = (execucao as any).codExecucao || (execucao as any).id;
           if (codExecucao) {
             await finalizarEtapa(Number(codExecucao), Number(codEtapa));
           }
         } catch (err) {
           console.warn('Erro ao salvar etapa na API:', err);
-          // Continua mesmo se falhar
         }
       }
 
@@ -251,7 +292,6 @@ const ProcessExecution = () => {
         setFormData({});
         setErrors({});
       } else {
-        // Finalizar processo
         handleFinishProcess();
       }
     } catch (err) {
@@ -262,7 +302,11 @@ const ProcessExecution = () => {
   };
 
   const handleFinishProcess = () => {
-    if (confirm('Tem certeza que deseja finalizar o processo? Todas as etapas foram concluídas?')) {
+    if (
+      confirm(
+        'Tem certeza que deseja finalizar o processo? Todas as etapas foram concluídas?'
+      )
+    ) {
       alert('Processo concluído com sucesso! 🎉');
       navigate(`/processos/${id}`);
     }
@@ -273,20 +317,27 @@ const ProcessExecution = () => {
       case 'form':
         return (
           <div className="space-y-4">
-            {currentStep.fields?.map((field) => (
+            {currentStep.fields?.map((field: any) => (
               <div key={field.name}>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   {field.label}
-                  {field.required && <span className="text-destructive ml-1">*</span>}
+                  {field.required && (
+                    <span className="text-destructive ml-1">*</span>
+                  )}
                 </label>
+
                 {field.type === 'select' ? (
                   <select
                     value={formData[field.name] || ''}
-                    onChange={(e) => handleInputChange(field.name, e.target.value)}
-                    className={`input ${errors[field.name] ? 'border-destructive' : ''}`}
+                    onChange={(e) =>
+                      handleInputChange(field.name, e.target.value)
+                    }
+                    className={`input ${
+                      errors[field.name] ? 'border-destructive' : ''
+                    }`}
                   >
                     <option value="">Selecione...</option>
-                    {field.options?.map((opt) => (
+                    {field.options?.map((opt: string) => (
                       <option key={opt} value={opt}>
                         {opt}
                       </option>
@@ -296,11 +347,16 @@ const ProcessExecution = () => {
                   <input
                     type={field.type}
                     value={formData[field.name] || ''}
-                    onChange={(e) => handleInputChange(field.name, e.target.value)}
-                    className={`input ${errors[field.name] ? 'border-destructive' : ''}`}
+                    onChange={(e) =>
+                      handleInputChange(field.name, e.target.value)
+                    }
+                    className={`input ${
+                      errors[field.name] ? 'border-destructive' : ''
+                    }`}
                     placeholder={`Digite ${field.label.toLowerCase()}`}
                   />
                 )}
+
                 {errors[field.name] && (
                   <p className="text-sm text-destructive mt-1 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-1" />
@@ -319,17 +375,27 @@ const ProcessExecution = () => {
               <p className="text-foreground mb-4">{currentStep.content?.text}</p>
               <div className="space-y-2">
                 <p className="font-semibold text-foreground mb-2">Checklist:</p>
-                {currentStep.content?.checklist?.map((item, idx) => (
-                  <label key={idx} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData[`checklist-${idx}`] || false}
-                      onChange={(e) => handleInputChange(`checklist-${idx}`, e.target.checked)}
-                      className="w-4 h-4 text-primary rounded"
-                    />
-                    <span className="text-foreground">{item}</span>
-                  </label>
-                ))}
+                {currentStep.content?.checklist?.map(
+                  (item: string, idx: number) => (
+                    <label
+                      key={idx}
+                      className="flex items-center space-x-2 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData[`checklist-${idx}`] || false}
+                        onChange={(e) =>
+                          handleInputChange(
+                            `checklist-${idx}`,
+                            e.target.checked
+                          )
+                        }
+                        className="w-4 h-4 text-primary rounded"
+                      />
+                      <span className="text-foreground">{item}</span>
+                    </label>
+                  )
+                )}
               </div>
             </div>
             <div className="border border-border rounded-lg p-4 bg-primary/5">
@@ -344,9 +410,11 @@ const ProcessExecution = () => {
         return (
           <div className="space-y-4">
             <p className="text-muted-foreground mb-4">
-              Complete os módulos de treinamento abaixo. Cada módulo deve ser concluído antes de avançar.
+              Complete os módulos de treinamento abaixo. Cada módulo deve ser
+              concluído antes de avançar.
             </p>
-            {currentStep.modules?.map((module) => (
+
+            {currentStep.modules?.map((module: any) => (
               <div
                 key={module.id}
                 className={`border-2 rounded-lg p-4 ${
@@ -359,11 +427,18 @@ const ProcessExecution = () => {
                   <input
                     type="checkbox"
                     checked={formData[`module-${module.id}`] || false}
-                    onChange={(e) => handleInputChange(`module-${module.id}`, e.target.checked)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        `module-${module.id}`,
+                        e.target.checked
+                      )
+                    }
                     className="w-5 h-5 text-primary rounded"
                   />
                   <div>
-                    <span className="font-medium text-foreground">{module.title}</span>
+                    <span className="font-medium text-foreground">
+                      {module.title}
+                    </span>
                     <p className="text-sm text-muted-foreground">
                       Acesse o FLOW Academy para completar este módulo
                     </p>
@@ -371,6 +446,7 @@ const ProcessExecution = () => {
                 </label>
               </div>
             ))}
+
             <Link
               to="/treinamento"
               className="btn btn-outline inline-flex items-center"
@@ -384,11 +460,13 @@ const ProcessExecution = () => {
       case 'quiz':
         return (
           <div className="space-y-6">
-            {currentStep.questions?.map((q) => (
+            {currentStep.questions?.map((q: any) => (
               <div key={q.id} className="border border-border rounded-lg p-4">
-                <p className="font-semibold text-foreground mb-3">{q.question}</p>
+                <p className="font-semibold text-foreground mb-3">
+                  {q.question}
+                </p>
                 <div className="space-y-2">
-                  {q.options?.map((option, idx) => (
+                  {q.options?.map((option: string, idx: number) => (
                     <label
                       key={idx}
                       className={`flex items-center space-x-2 p-3 rounded-lg cursor-pointer transition-colors ${
@@ -401,7 +479,9 @@ const ProcessExecution = () => {
                         type="radio"
                         name={`question-${q.id}`}
                         checked={formData[`question-${q.id}`] === idx}
-                        onChange={() => handleInputChange(`question-${q.id}`, idx)}
+                        onChange={() =>
+                          handleInputChange(`question-${q.id}`, idx)
+                        }
                         className="w-4 h-4 text-primary"
                       />
                       <span className="text-foreground">{option}</span>
@@ -417,9 +497,11 @@ const ProcessExecution = () => {
         return (
           <div className="space-y-4">
             <p className="text-muted-foreground mb-4">
-              Faça upload dos documentos necessários. Todos os documentos marcados como obrigatórios devem ser enviados.
+              Faça upload dos documentos necessários. Todos os documentos
+              marcados como obrigatórios devem ser enviados.
             </p>
-            {currentStep.documents?.map((doc, idx) => (
+
+            {currentStep.documents?.map((doc: any, idx: number) => (
               <div
                 key={idx}
                 className={`border-2 rounded-lg p-4 ${
@@ -430,15 +512,21 @@ const ProcessExecution = () => {
               >
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <span className="font-medium text-foreground">{doc.name}</span>
+                    <span className="font-medium text-foreground">
+                      {doc.name}
+                    </span>
                     {doc.required && (
-                      <span className="ml-2 text-xs text-destructive">* Obrigatório</span>
+                      <span className="ml-2 text-xs text-destructive">
+                        * Obrigatório
+                      </span>
                     )}
                   </div>
-                  {formData[`doc-${idx}`] && (
+
+                {formData[`doc-${idx}`] && (
                     <CheckCircle2 className="w-5 h-5 text-success" />
                   )}
                 </div>
+
                 <input
                   type="file"
                   onChange={(e) => {
@@ -449,12 +537,15 @@ const ProcessExecution = () => {
                   className="hidden"
                   id={`file-${idx}`}
                 />
+
                 <label
                   htmlFor={`file-${idx}`}
                   className="btn btn-outline btn-small cursor-pointer inline-flex items-center"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  {formData[`doc-${idx}`] ? 'Documento Enviado' : 'Enviar Documento'}
+                  {formData[`doc-${idx}`]
+                    ? 'Documento Enviado'
+                    : 'Enviar Documento'}
                 </label>
               </div>
             ))}
@@ -462,25 +553,40 @@ const ProcessExecution = () => {
         );
 
       default:
-        return <p className="text-muted-foreground">Conteúdo da etapa será carregado aqui...</p>;
+        return (
+          <p className="text-muted-foreground">
+            Conteúdo da etapa será carregado aqui...
+          </p>
+        );
     }
   };
 
   const canProceed = () => {
     if (currentStep.type === 'form') {
-      return currentStep.fields?.every((f) => !f.required || formData[f.name]);
+      return currentStep.fields?.every(
+        (f: any) => !f.required || formData[f.name]
+      );
     }
     if (currentStep.type === 'information') {
-      return currentStep.content?.checklist?.every((_, idx) => formData[`checklist-${idx}`]);
+      return currentStep.content?.checklist?.every(
+        (_: any, idx: number) => formData[`checklist-${idx}`]
+      );
     }
     if (currentStep.type === 'training') {
-      return currentStep.modules?.every((m) => formData[`module-${m.id}`]);
+      return currentStep.modules?.every(
+        (m: any) => formData[`module-${m.id}`]
+      );
     }
     if (currentStep.type === 'quiz') {
-      return currentStep.questions?.every((q) => formData[`question-${q.id}`] !== undefined);
+      return currentStep.questions?.every(
+        (q: any) => formData[`question-${q.id}`] !== undefined
+      );
     }
     if (currentStep.type === 'upload') {
-      return currentStep.documents?.every((d, idx) => !d.required || formData[`doc-${idx}`]);
+      return currentStep.documents?.every(
+        (d: any, idx: number) =>
+          !d.required || formData[`doc-${idx}`]
+      );
     }
     return true;
   };
@@ -509,9 +615,13 @@ const ProcessExecution = () => {
         <div className="card p-6 border-destructive bg-destructive/10">
           <div className="flex items-center space-x-3 mb-4">
             <AlertCircle className="w-6 h-6 text-destructive" />
-            <h2 className="text-xl font-bold text-foreground">Erro ao carregar execução</h2>
+            <h2 className="text-xl font-bold text-foreground">
+              Erro ao carregar execução
+            </h2>
           </div>
-          <p className="text-muted-foreground mb-4">{error || 'Processo não encontrado'}</p>
+          <p className="text-muted-foreground mb-4">
+            {error || 'Processo não encontrado'}
+          </p>
           <Link to={`/processos/${id}`} className="btn btn-primary">
             Voltar para Processo
           </Link>
@@ -551,15 +661,20 @@ const ProcessExecution = () => {
 
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold text-foreground">{processToUse.title}</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            {processToUse.title}
+          </h1>
           <div className="text-sm text-muted-foreground">
-            Etapa {currentStep.order || currentIndex + 1} de {processToUse.steps.length}
+            Etapa {currentStep.order || currentIndex + 1} de{' '}
+            {processToUse.steps.length}
           </div>
         </div>
         <div className="w-full bg-muted rounded-full h-2 mt-4">
           <div
             className="bg-primary h-2 rounded-full transition-all duration-300"
-            style={{ width: `${((currentIndex + 1) / processToUse.steps.length) * 100}%` }}
+            style={{
+              width: `${((currentIndex + 1) / processToUse.steps.length) * 100}%`,
+            }}
           />
         </div>
       </div>
@@ -568,21 +683,26 @@ const ProcessExecution = () => {
         {/* Sidebar com etapas */}
         <div className="lg:col-span-1">
           <div className="card p-4 space-y-2 sticky top-20">
-            <h3 className="font-semibold text-foreground mb-4">Etapas do Processo</h3>
+            <h3 className="font-semibold text-foreground mb-4">
+              Etapas do Processo
+            </h3>
+
             {processToUse.steps.map((step: any, index: number) => {
               const isActive = step.id === currentStepId;
-              const isCompleted = stepData[step.id]?.completed || index < currentIndex;
+              const isCompleted =
+                stepData[step.id]?.completed || index < currentIndex;
               const isBlocked = index > currentIndex && !isCompleted;
 
               return (
-                  <Link
+                <Link
                   key={step.id}
                   to={`/processos/${id}/executar/etapa/${step.id}`}
                   onClick={(e) => {
-                    // Bloquear acesso a etapas futuras
                     if (isBlocked) {
                       e.preventDefault();
-                      alert('Você não pode pular etapas. Complete as etapas anteriores primeiro.');
+                      alert(
+                        'Você não pode pular etapas. Complete as etapas anteriores primeiro.'
+                      );
                     }
                   }}
                   className={`flow-step block ${
@@ -616,20 +736,29 @@ const ProcessExecution = () => {
         {/* Conteúdo principal */}
         <div className="lg:col-span-2">
           <div className="card p-6">
-            <h2 className="text-2xl font-bold text-foreground mb-2">{currentStep.title}</h2>
-            <p className="text-muted-foreground mb-6">{currentStep.description}</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              {currentStep.title}
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              {currentStep.description}
+            </p>
 
-            <div className="border-t border-border pt-6 mb-6">{renderStepContent()}</div>
+            <div className="border-t border-border pt-6 mb-6">
+              {renderStepContent()}
+            </div>
 
             <div className="flex gap-3 pt-4 border-t border-border">
               {currentIndex > 0 && (
                 <Link
-                  to={`/processos/${id}/executar/etapa/${processToUse.steps[currentIndex - 1].id}`}
+                  to={`/processos/${id}/executar/etapa/${
+                    processToUse.steps[currentIndex - 1].id
+                  }`}
                   className="btn btn-outline"
                 >
                   Etapa Anterior
                 </Link>
               )}
+
               {currentIndex < processToUse.steps.length - 1 ? (
                 <button
                   onClick={handleCompleteStep}

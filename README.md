@@ -1,232 +1,196 @@
-# FLOW - Sistema Inteligente de Padronização Operacional
+# FLOW – Sistema Inteligente de Padronização Operacional
 
-## 📋 Sobre o Projeto
+## Sobre o Projeto
 
-FLOW é um sistema inteligente de padronização, execução e aprendizado operacional. Ele organiza, corrige e otimiza fluxos de trabalho, transformando processos soltos em trilhas claras, seguras e eficientes.
+O FLOW é um sistema desenvolvido para organizar e padronizar processos internos de forma clara e objetiva.  
+A proposta é facilitar o dia a dia operacional, garantindo que qualquer pessoa consiga executar atividades seguindo um passo a passo estruturado.
 
-### O Problema que o FLOW Resolve
+O sistema permite visualizar processos, acompanhar etapas, executar tarefas e acessar conteúdos de apoio (como treinamentos, vídeos e quizzes).  
+Ele foi desenvolvido como parte da Global Solution – Front-End do curso de Análise e Desenvolvimento de Sistemas da FIAP.
 
-- **Cada funcionário faz do seu jeito**: Não existe padronização. A operação fica instável e imprevisível.
-- **Onboarding é lento e repetitivo**: Pessoas novas demoram meses para aprender — e sobrecarregam o time.
-- **Erros operacionais se repetem**: Porque ninguém lembra o processo inteiro, só partes dele.
-- **O conhecimento está espalhado**: PDFs, anotações, post-its, planilhas, mensagens… nada centralizado.
+---
 
-### A Solução
+## Objetivo
 
-- ✅ **Fluxos visuais inteligentes**: Cada processo é exibido como um mapa: etapas → ações → resultados.
-- ✅ **Guia de execução passo a passo**: O usuário sabe exatamente o que fazer, quando fazer e como fazer.
-- ✅ **Treinamento contextual (FLOW Academy)**: Vídeos, textos, tutoriais, testes e FAQs automáticos.
-- ✅ **Assistente IA (FLOW Coach)**: Responde dúvidas, sugere melhorias e explica processos em linguagem natural.
-- ✅ **Histórico e rastreabilidade**: Quem fez o quê, quando e como — 100% registrado.
-- ✅ **Redução de erros com alertas inteligentes**: Avisos e correções em tempo real.
+- Oferecer uma interface simples para visualizar, cadastrar e executar processos.
+- Integrar com a API desenvolvida em Java (backend da GS).
+- Permitir que novos colaboradores sigam um fluxo guiado de execução.
+- Exibir métricas e indicadores básicos a partir das informações fornecidas pela API.
 
-## 🚀 Status do Projeto
+---
 
-✅ **Concluído** - Projeto pronto para deploy na Vercel com integração completa à API Java.
-
-## 📚 Sumário
+## Sumário
 
 - [Tecnologias Utilizadas](#-tecnologias-utilizadas)
 - [Instalação](#-instalação)
 - [Como Usar](#-como-usar)
 - [Estrutura de Pastas](#-estrutura-de-pastas)
-- [Endpoints ou Rotas Principais](#-endpoints-ou-rotas-principais)
-- [Screenshots / Demonstração](#-screenshots--demonstração)
-- [Autores e Créditos](#-autores-e-créditos)
-- [Contato](#-contato)
+- [Rotas da Aplicação](#-rotas-da-aplicação)
+- [Integração com a API](#-integração-com-a-api)
+- [Screenshots](#-screenshots)
+- [Equipe](#-equipe)
+- [Links Importantes](#-links-importantes)
 
-## 🛠 Tecnologias Utilizadas
+---
 
-- **React 18.2.0** - Biblioteca JavaScript para construção de interfaces
-- **Vite 4.5.0** - Build tool e dev server
-- **TypeScript 5.2.2** - Superset do JavaScript com tipagem estática
-- **React Router DOM 6.20.1** - Roteamento para aplicações React
-- **Tailwind CSS 3.3.5** - Framework CSS utility-first
-- **Lucide React** - Biblioteca de ícones
-- **Context API** - Gerenciamento de estado (tema escuro/claro)
+## Tecnologias Utilizadas
 
-## 📦 Instalação
+- **React 18**
+- **Vite 4**
+- **TypeScript**
+- **React Router DOM**
+- **Tailwind CSS**
+- **Lucide Icons**
+- **Context API** (tema claro/escuro)
+- **Fetch API** para consumo do backend
+
+---
+
+## Instalação
 
 1. Clone o repositório:
+
 ```bash
-git clone COLE AQUI O LINK DO GITHUB
+git clone https://github.com/lincolnroncato/flow-front-api
 cd flow-system
-```
+Instale as dependências:
 
-2. Instale as dependências:
-```bash
+bash
+Copiar código
 npm install
-```
+Copie o arquivo de variáveis de ambiente:
 
-3. Configure as variáveis de ambiente:
-```bash
+bash
+Copiar código
 cp .env.example .env
-```
-Edite o arquivo `.env` se necessário para alterar a URL da API.
+Caso necessário, edite a URL da API no arquivo .env:
 
-4. Execute o projeto em modo de desenvolvimento:
-```bash
+ini
+Copiar código
+VITE_API_URL=https://flow-java-api-production.up.railway.app
+Execute o ambiente de desenvolvimento:
+
+bash
+Copiar código
 npm run dev
-```
+Para gerar o build de produção:
 
-5. Para build de produção:
-```bash
+bash
+Copiar código
 npm run build
-```
 
-6. Para preview do build:
-```bash
-npm run preview
-```
+Como Usar
+Após rodar npm run dev, o sistema estará disponível no navegador.
+Nele, o usuário pode:
 
-## 💻 Como Usar
+visualizar processos cadastrados;
 
-### Desenvolvimento
+criar, editar e excluir processos;
 
-Após instalar as dependências, execute:
+acessar detalhes de um processo;
 
-```bash
-npm run dev
-```
+executar etapas de forma sequencial;
 
+acompanhar progresso;
 
+visualizar dashboards simples;
 
-### Navegação
+acessar conteúdos de treinamento.
 
-- **Login**: `/login` - Página de autenticação
-- **Home**: `/home` - Página inicial com visão geral
-- **Processos**: `/processos` - Lista de processos disponíveis
-- **Visualização de Processo**: `/processos/:id` - Detalhes de um processo específico
-- **Execução**: `/processos/:id/executar` - Executar um processo
-- **Treinamento**: `/treinamento` - FLOW Academy
-- **Dashboard**: `/dashboard` - Métricas e estatísticas
-- **Chatbot**: `/chatbot` - FLOW Coach (Assistente IA)
+Estrutura de Pastas
+bash
+Copiar código
+src/
+├── components/
+├── contexts/
+├── pages/
+│   ├── Home.tsx
+│   ├── ProcessList.tsx
+│   ├── ProcessView.tsx
+│   ├── ProcessForm.tsx
+│   ├── ProcessExecution.tsx
+│   ├── Dashboard.tsx
+│   ├── Training.tsx
+│   └── Sobre/Contato/Participantes
+├── services/        # API (fetch)
+├── types/           # Tipagens TS
+├── App.tsx
+└── main.tsx
+Rotas da Aplicação
+Rotas Estáticas
+/home – Página inicial
 
-### Tema Escuro/Claro
+/sobre – Informações gerais
 
-O sistema possui suporte completo a tema escuro e claro, com detecção automática das preferências do sistema. Use o botão no header para alternar manualmente.
+/faq – Perguntas frequentes
 
-## 📁 Estrutura de Pastas
+/contato – Página de contato
 
-```
-flow-system/
-├── public/              # Arquivos estáticos
-├── src/
-│   ├── components/      # Componentes reutilizáveis
-│   │   ├── Header.tsx
-│   │   ├── Sidebar.tsx
-│   │   └── Layout.tsx
-│   ├── contexts/        # Context API
-│   │   └── ThemeContext.tsx
-│   ├── pages/          # Páginas da aplicação
-│   │   ├── Login.tsx
-│   │   ├── Home.tsx
-│   │   ├── ProcessList.tsx
-│   │   ├── ProcessView.tsx
-│   │   ├── ProcessExecution.tsx
-│   │   ├── Training.tsx
-│   │   ├── Dashboard.tsx
-│   │   └── Chatbot.tsx
-│   ├── types/          # Definições de tipos TypeScript
-│   │   └── index.ts
-│   ├── App.tsx         # Componente principal
-│   ├── main.tsx        # Entry point
-│   └── index.css       # Estilos globais
-├── index.html
-├── package.json
-├── tailwind.config.js
-├── tsconfig.json
-└── vite.config.ts
-```
+/participantes – Integrantes da equipe
 
-## 🛣 Rotas da Aplicação
+/dashboard – Métricas básicas
 
-### Rotas Estáticas
-- `/home` - Página inicial
-- `/sobre` ou `/about` - Sobre o projeto
-- `/faq` - Perguntas frequentes
-- `/contato` - Página de contato
-- `/participantes` - Equipe de desenvolvimento
-- `/treinamento` - FLOW Academy
-- `/dashboard` - Dashboard com métricas
-- `/chatbot` - FLOW Coach (Assistente IA)
+/treinamento – FLOW Academy
 
-### Rotas Dinâmicas
-- `/processos` - Lista de processos (GET)
-- `/processos/novo` - Criar novo processo (POST)
-- `/processos/:id` - Visualizar processo específico (GET)
-- `/processos/:id/editar` - Editar processo (PUT)
-- `/processos/:id/executar` - Iniciar execução de processo
-- `/processos/:id/executar/etapa/:stepId` - Executar etapa específica
-- `/treinamento/:processId` - Treinamento de processo específico
+Rotas Dinâmicas
+/processos – Listagem de processos
 
-## 🔌 Endpoints da API (Backend Java)
+/processos/novo – Criar processo
 
-### Processos
-- `GET /processos` - Listar todos os processos
-- `GET /processos/{id}` - Buscar processo por ID
-- `POST /processos` - Criar novo processo
-- `PUT /processos/{id}` - Atualizar processo
-- `DELETE /processos/{id}` - Deletar processo
+/processos/:id – Visualizar processo
 
-### Etapas
-- `GET /etapas?codProcesso={id}` - Listar etapas de um processo
-- `GET /processos/{id}/etapas` - Listar etapas (alternativa)
-- `POST /etapas` - Criar nova etapa
-- `PUT /etapas/{id}` - Atualizar etapa
-- `DELETE /etapas/{id}` - Deletar etapa
+/processos/:id/editar – Editar processo
 
-### Execuções
-- `POST /execucoes/iniciar` - Iniciar execução de processo
-- `PUT /execucoes/{id}/finalizar-etapa` - Finalizar etapa de execução
-- `GET /execucoes?cpfOuUsuario={x}` - Listar execuções por usuário
-- `GET /execucoes/{id}` - Buscar execução por ID
+/processos/:id/executar – Iniciar execução
 
-## 📸 Screenshots / Demonstração
+/processos/:id/executar/etapa/:stepId – Etapa específica
 
-_Screenshots serão adicionados após a conclusão das telas principais._
+Integração com a API (Backend Java)
+O front consome a API publicada no Railway:
 
-## 👥 Autores e Créditos
+arduino
+Copiar código
+https://flow-java-api-production.up.railway.app
+Endpoints principais
+Processos
+GET /processos
 
-### Equipe de Desenvolvimento
-- **Rafael Malaguti** - RM 561830
-- **Lincoln Roncato** - RM 565944
-- **Natalia Souza** - RM 564099
+GET /processos/{id}
 
-**Turma**: 1TDSR
+POST /processos
 
-### Tecnologias
-- **Framework**: React 18.2.0 + Vite 4.5.0 + TypeScript 5.2.2
-- **Roteamento**: React Router DOM 6.20.1
-- **Estilização**: Tailwind CSS 3.3.5
-- **Ícones**: Lucide React
-- **Gerenciamento de Estado**: Context API (tema claro/escuro)
-- **Validação**: React Hook Form + Zod
-- **API**: Fetch API nativo (sem axios)
+PUT /processos/{id}
 
-### Características Técnicas
-- ✅ SPA (Single Page Application) pronta para deploy na Vercel
-- ✅ Integração completa com API Java remota via fetch
-- ✅ CRUD completo (GET/POST/PUT/DELETE) para processos
-- ✅ Rotas estáticas e dinâmicas funcionando
-- ✅ Tema claro/escuro via Context API
-- ✅ Tratamento de erros em todas as requisições
-- ✅ Tipagem forte com TypeScript
-- ✅ Layout responsivo com Tailwind CSS
+DELETE /processos/{id}
 
----
+Etapas
+GET /etapas?codProcesso={id}
 
-## 🔗 Links
+POST /etapas
 
-- **GitHub**: COLE AQUI O LINK DO GITHUB
-- **Vídeo do YouTube**: COLE AQUI O LINK DO VÍDEO
-- **Deploy Vercel**: COLE AQUI O LINK DO VERCEL
+PUT /etapas/{id}
 
----
+DELETE /etapas/{id}
 
-## 📞 Contato
+Execuções
+POST /execucoes/iniciar
 
-Para dúvidas ou sugestões sobre o projeto, entre em contato através da página de contato da aplicação ou pelos perfis dos desenvolvedores listados na página de participantes.
+PUT /execucoes/{id}/finalizar-etapa
 
+Toda comunicação é feita via Fetch API, sem bibliotecas externas.
 
+Equipe
+Turma: 1TDSR — FIAP
 
+Lincoln Roncato	RM 565944
+Rafael Malaguti	RM 561830
+Natalia Souza	RM 564099
+
+Links Importantes
+Repositório GitHub: https://github.com/lincolnroncato/flow-front-api
+
+Deploy (Vercel):
+
+Video Pitch da Solução - FLOW: https://www.youtube.com/watch?v=TRQtgkjL0pw&t=3s
+
+Video Front-end - FLOW: https://www.youtube.com/watch?v=BDxQdpMn19c 
